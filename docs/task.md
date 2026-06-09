@@ -32,3 +32,10 @@
 - [ ] Implement auto-delete old recordings based on retention settings
 - [ ] Add dark/light theme options and haptic feedback toggles
 - [x] Final end-to-end local testing and validation (APK compilation & verification)
+
+## Phase 5: System-Level Privileges (RoleManager) ✦
+- [x] Create `CallRedirectionServiceImpl.kt` for intercepting outgoing numbers
+- [x] Register `CallRedirectionServiceImpl` in `AndroidManifest.xml`
+- [x] Implement `RoleManager` logic and activity result launchers in `MainActivity.kt`
+- [x] Add descriptions for system roles in `PermissionsOnboardingScreen.kt`
+- [x] Verify compilation and generate the final `CallRecorder.apk`

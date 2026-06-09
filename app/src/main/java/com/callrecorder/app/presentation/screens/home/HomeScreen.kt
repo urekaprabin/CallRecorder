@@ -21,6 +21,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import android.content.Context
+import android.content.SharedPreferences
+import android.widget.Toast
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -38,6 +43,25 @@ fun HomeScreen(
     homeViewModel: HomeViewModel = hiltViewModel(),
     playerViewModel: PlayerViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("call_recorder_prefs", Context.MODE_PRIVATE) }
+    var customFolderUri by remember { mutableStateOf(prefs.getString("custom_folder_uri", "") ?: "") }
+    var recordingMode by remember { mutableStateOf(prefs.getString("recording_mode", "HYBRID") ?: "HYBRID") }
+
+    DisposableEffect(Unit) {
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { p, key ->
+            if (key == "custom_folder_uri") {
+                customFolderUri = p.getString("custom_folder_uri", "") ?: ""
+            } else if (key == "recording_mode") {
+                recordingMode = p.getString("recording_mode", "HYBRID") ?: "HYBRID"
+            }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        onDispose {
+            prefs.unregisterOnSharedPreferenceChangeListener(listener)
+        }
+    }
+
     val uiState by homeViewModel.uiState.collectAsState()
     val searchQuery by homeViewModel.searchQuery.collectAsState()
     val showStarredOnly by homeViewModel.showStarredOnly.collectAsState()
@@ -50,7 +74,13 @@ fun HomeScreen(
                 title = { Text("Recordings", fontWeight = FontWeight.Bold) },
                 actions = {
                     IconButton(
-                        onClick = { homeViewModel.triggerManualSync() },
+                        onClick = { 
+                            if (customFolderUri.isEmpty()) {
+                                Toast.makeText(context, "Please set your Xiaomi sync folder in Settings first.", Toast.LENGTH_LONG).show()
+                            } else {
+                                homeViewModel.triggerManualSync()
+                            }
+                        },
                         enabled = !isSyncing
                     ) {
                         if (isSyncing) {
@@ -116,6 +146,49 @@ fun HomeScreen(
                             }
                         }
                     )
+                }
+
+                if (customFolderUri.isEmpty() && (recordingMode == "HYBRID" || recordingMode == "NATIVE")) {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "Setup Required",
+                                tint = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Xiaomi Sync Setup Required",
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                                Text(
+                                    text = "Select your native call recording folder to enable synchronization.",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            }
+                            TextButton(
+                                onClick = onNavigateToSettings,
+                                colors = ButtonDefaults.textButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.error
+                                )
+                            ) {
+                                Text("Set Up", fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
                 }
 
                 // Recordings List

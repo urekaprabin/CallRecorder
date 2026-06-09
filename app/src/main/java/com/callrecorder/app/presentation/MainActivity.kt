@@ -1,6 +1,7 @@
 package com.callrecorder.app.presentation
 
 import android.Manifest
+import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -31,13 +32,45 @@ class MainActivity : ComponentActivity() {
 
     private var hasPermissions by mutableStateOf(false)
 
+    // Contract for requesting system roles
+    private val requestCallScreeningLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            Log.d(TAG, "Call Screening role granted!")
+        } else {
+            Toast.makeText(
+                this,
+                "Call Screening (Caller ID) role is recommended for incoming call detection.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+        checkAndRequestRoles()
+    }
+
+    private val requestCallRedirectionLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            Log.d(TAG, "Call Redirection role granted!")
+        } else {
+            Toast.makeText(
+                this,
+                "Call Redirection role is recommended for outgoing call number logging.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
     // Contract for requesting standard permissions
     private val requestPermissionsLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         val allGranted = permissions.entries.all { it.value }
         hasPermissions = allGranted
-        if (!allGranted) {
+        if (allGranted) {
+            checkAndRequestRoles()
+        } else {
             Toast.makeText(
                 this,
                 "Some permissions are required for the app to function properly.",
@@ -102,10 +135,30 @@ class MainActivity : ComponentActivity() {
             requestPermissionsLauncher.launch(permissionsToRequest.toTypedArray())
         } else {
             hasPermissions = true
+            checkAndRequestRoles()
         }
 
         // Request overlay settings separately (draw over other apps)
         checkOverlayPermission()
+    }
+
+    private fun checkAndRequestRoles() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val roleManager = getSystemService(Context.ROLE_SERVICE) as RoleManager
+            
+            // 1. Request Call Screening role (Caller ID & Spam)
+            if (roleManager.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING) &&
+                !roleManager.isRoleHeld(RoleManager.ROLE_CALL_SCREENING)) {
+                val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING)
+                requestCallScreeningLauncher.launch(intent)
+            }
+            // 2. Request Call Redirection role (Call Redirection)
+            else if (roleManager.isRoleAvailable(RoleManager.ROLE_CALL_REDIRECTION) &&
+                !roleManager.isRoleHeld(RoleManager.ROLE_CALL_REDIRECTION)) {
+                val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_CALL_REDIRECTION)
+                requestCallRedirectionLauncher.launch(intent)
+            }
+        }
     }
 
     private fun isPermissionGranted(permission: String): Boolean {

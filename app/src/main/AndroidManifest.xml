@@ -64,6 +64,16 @@
             </intent-filter>
         </service>
 
+        <!-- Call redirection service to identify outgoing numbers (Android 10+ / API 29+) -->
+        <service
+            android:name=".service.CallRedirectionServiceImpl"
+            android:permission="android.permission.BIND_CALL_REDIRECTION_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.telecom.CallRedirectionService" />
+            </intent-filter>
+        </service>
+
         <!-- Broadcast Receiver for Call State detection -->
         <receiver
             android:name=".receiver.CallReceiver"

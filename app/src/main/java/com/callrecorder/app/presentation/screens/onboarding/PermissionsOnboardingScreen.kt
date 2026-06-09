@@ -63,6 +63,12 @@ fun PermissionsOnboardingScreen(
                 description = "Required to record the call conversation audio."
             )
 
+            PermissionItem(
+                icon = Icons.Default.Settings,
+                title = "System Call Roles",
+                description = "Enables system-level integration to resolve phone numbers and bypass Android 15 background restrictions."
+            )
+
             // Android 15 Restricted Settings notice Card
             Card(
                 colors = CardDefaults.cardColors(

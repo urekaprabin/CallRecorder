@@ -61,9 +61,12 @@ Follow these instructions to transfer and set it up on your **Xiaomi 15T (Androi
     *   Once installed, the app might request overlay, notification, or special permissions and get blocked with a "Restricted setting" dialog.
     *   Minimize the app. Go to your phone's **Settings** → **Apps** → **Manage Apps** → **Call Recorder**.
     *   Scroll down, tap **Allow restricted settings** (you will be prompted to authenticate with your fingerprint/PIN).
-4.  **Grant Permissions & Configure:**
+4.  **Grant Permissions, Accept System Roles & Configure:**
     *   Reopen the **Call Recorder** app.
     *   Click **Grant Permissions** on the onboarding screen to authorize the required permissions (Call Logs, Contacts, Phone, Notification, and Accessibility Service if using app-level recording).
+    *   **Accept Default App Roles (Critical):**
+        *   You will see a system dialog asking to set the app as your default **Caller ID & Spam app** (Call Screening). Select **Call Recorder** and click **Set as default**. This enables incoming call number detection.
+        *   You will see another prompt asking to set the app as your default **Call Redirection app** (Call Redirection). Select **Call Recorder** and click **Set as default**. This enables outgoing call number detection.
     *   Go to **Settings** in the app:
         *   Enable the Call Recorder Service.
         *   Choose your preferred recording mode (**Hybrid Mode** is recommended).

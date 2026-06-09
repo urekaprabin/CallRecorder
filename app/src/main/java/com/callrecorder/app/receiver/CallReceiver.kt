@@ -5,7 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.telephony.TelephonyManager
 import android.util.Log
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.callrecorder.app.service.CallRecorderService
+import com.callrecorder.app.service.NativeFolderSyncWorker
 
 class CallReceiver : BroadcastReceiver() {
 
@@ -40,10 +43,21 @@ class CallReceiver : BroadcastReceiver() {
                 }
                 TelephonyManager.EXTRA_STATE_IDLE -> {
                     // Call ended
-                    Log.d(TAG, "State: IDLE - Stopping recording service")
+                    Log.d(TAG, "State: IDLE - Stopping recording service and triggering folder sync")
                     stopRecordingService(context)
+                    triggerFolderSync(context)
                 }
             }
+        }
+    }
+
+    private fun triggerFolderSync(context: Context) {
+        try {
+            val syncRequest = OneTimeWorkRequestBuilder<NativeFolderSyncWorker>().build()
+            WorkManager.getInstance(context).enqueue(syncRequest)
+            Log.d(TAG, "One-time native folder sync worker enqueued successfully.")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to trigger folder sync worker", e)
         }
     }
 
